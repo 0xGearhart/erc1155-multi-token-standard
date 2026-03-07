@@ -1,13 +1,12 @@
 // SPDX-License-Identifier: MIT
 
-import {Script, console2} from "forge-std/Script.sol";
-
 pragma solidity 0.8.33;
 
+import {Script, console2} from "forge-std/Script.sol";
+
 contract CodeConstants {
-    string constant TOKEN_NAME = "";
-    string constant TOKEN_SYMBOL = "";
-    uint256 constant INITIAL_SUPPLY = 1 ether;
+    string constant GAME_ITEMS_URI = "";
+    // uint256 constant INITIAL_SUPPLY = 1 ether;
 
     // default local account and key for signing
     address constant ANVIL_DEFAULT_ACCOUNT = 0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266;
