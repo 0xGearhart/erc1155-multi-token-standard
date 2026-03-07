@@ -40,8 +40,13 @@ Small chunks:
 1. Define coverage measurement policy for this repo.
 - Confirm stage-scope coverage command/report format.
 - Lock scope to `src/` and `script/` for stage coverage gates.
- - Lock metrics to lines/functions/branches and define unreachable-item documentation format for review sign-off.
- - Lock the report artifact path to compare stage-over-stage progress in reviews.
+- Lock metrics to lines/functions/branches and define unreachable-item documentation format for review sign-off.
+- Lock the report artifact path to compare stage-over-stage progress in reviews.
+ - Standard stage coverage command: `FOUNDRY_PROFILE=coverage forge coverage`.
+ - Standard artifact capture command: `FOUNDRY_PROFILE=coverage forge coverage | tee reports/stage-<N>-coverage.txt`.
+ - Unreachable-item exception format (required in stage review): file path, function, line(s), why unreachable, and proof (test/trace/static analysis).
+ - Acceptable unreachable examples: compiler-eliminated defensive paths, impossible branches from strict preconditions, and dead paths introduced only by inherited library internals.
+ - Non-acceptable unreachable examples: untested happy/negative paths that can be exercised with deterministic tests.
 2. Add/standardize make targets for stage checks.
 - Build, test, coverage, and report output paths.
 3. Create stage checklist template in this file for repeated review cycles.
@@ -49,6 +54,45 @@ Small chunks:
 Sign-off artifacts:
 - Baseline report with current build/test/coverage status.
 - Stage checklist template ready.
+
+### Stage Review Checklist Template
+Use this template at the end of each stage before approval to advance.
+
+Stage: `Stage <N> - <Name>`
+Date: `YYYY-MM-DD`
+Reviewer(s): `<name>`
+
+1. Scope and decisions
+- Planned chunks for this stage are complete.
+- Any scope changes are documented and approved.
+- No unresolved `TODO`/`QUESTION` markers in touched files.
+
+2. Defense packet (required)
+- What changed and why.
+- Security/trust assumptions.
+- Alternatives considered and rejected.
+- Test evidence and coverage evidence.
+
+3. Stage gate checks
+- `forge build` passes.
+- `forge test` passes.
+- `FOUNDRY_PROFILE=coverage forge coverage` meets 100% lines/functions/branches for stage scope (`src/`, `script/`) except approved unreachable items.
+- `slither .` run complete; findings resolved or accepted with explicit rationale.
+- NatSpec complete for touched source contracts.
+- Solidity style-guide conformance validated for touched files.
+
+4. Coverage and unreachable exceptions
+- Coverage report artifact linked: `reports/stage-<N>-coverage.txt`.
+- Any unreachable exceptions documented with:
+  - file path
+  - function
+  - line(s)
+  - rationale
+  - proof (test/trace/static analysis)
+
+5. Outcome
+- Stage status: `Approved` or `Rejected`.
+- If rejected: required fixes listed and assigned.
 
 ### Stage 1 - Core ERC-1155 Contract Hardening
 Objective: finalize a secure, documented core token contract.

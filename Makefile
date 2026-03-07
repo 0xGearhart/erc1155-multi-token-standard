@@ -1,8 +1,16 @@
 -include .env
 
-.PHONY: all reset clean remove install build test coverage-report snapshot gas-report anvil deploy
+.PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check snapshot gas-report anvil deploy
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
+# Keep CI artifacts grouped for stage-by-stage review evidence.
+REPORTS_DIR := reports
+# Stage label is used in coverage artifact filenames (e.g., stage-0-coverage.txt).
+STAGE ?= local
+# Ignore noisy dependency-only warnings during coverage runs.
+COVERAGE_IGNORED_CODES ?= 2424 4591
+# Hide Foundry internal WARN spam while keeping real errors visible.
+RUST_LOG_COVERAGE ?= error
 
 all: install build
 
@@ -24,17 +32,32 @@ build:; forge build
 test :; forge test 
 
 # Run forge coverage with minimal fuzz/invariant runs to save time
-coverage :; FOUNDRY_PROFILE=coverage forge coverage
+coverage:
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code))
 
 # Create test coverage report and save to .txt file
 # Use "coverage" foundry profile to prevent crashes due to excessive fuzz and invariant runs
-coverage-report :; FOUNDRY_PROFILE=coverage forge coverage --report debug > coverage.txt
+coverage-report:
+	@mkdir -p $(REPORTS_DIR)
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code)) --report debug > $(REPORTS_DIR)/coverage-debug.txt
+
+# Stage coverage artifact expected by plan.md
+stage-coverage:
+	@mkdir -p $(REPORTS_DIR)
+	# Keep the report in reports/ so each stage review has a fixed artifact path.
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code)) | tee $(REPORTS_DIR)/stage-$(STAGE)-coverage.txt
+
+# Baseline stage check flow
+# Single command to run the minimum gate checks before stage sign-off.
+stage-check: build test stage-coverage
 
 # Generate Gas Snapshot
 snapshot :; forge snapshot
 
 # Generate table showing gas cost for each function
-gas-report :; FOUNDRY_PROFILE=coverage forge test --gas-report > gas.txt
+gas-report:
+	@mkdir -p $(REPORTS_DIR)
+	@FOUNDRY_PROFILE=coverage forge test --gas-report > $(REPORTS_DIR)/gas.txt
 
 anvil :; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
 
