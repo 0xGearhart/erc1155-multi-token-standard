@@ -4,10 +4,9 @@ pragma solidity 0.8.33;
 
 import {AccessControlDefaultAdminRules} from "@openzeppelin/contracts/access/extensions/AccessControlDefaultAdminRules.sol";
 import {ERC1155} from "@openzeppelin/contracts/token/ERC1155/ERC1155.sol";
-import {ERC1155Burnable} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Burnable.sol";
 import {ERC1155Supply} from "@openzeppelin/contracts/token/ERC1155/extensions/ERC1155Supply.sol";
 
-contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Burnable, ERC1155Supply {
+contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
     bytes32 public constant URI_SETTER_ROLE = keccak256("URI_SETTER_ROLE");
     bytes32 public constant MINTER_ROLE = keccak256("MINTER_ROLE");
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
@@ -46,6 +45,14 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Burnable, 
         onlyRole(MINTER_ROLE)
     {
         _mintBatch(to, ids, amounts, data);
+    }
+
+    function burn(uint256 id, uint256 value) public onlyRole(BURNER_ROLE) {
+        _burn(_msgSender(), id, value);
+    }
+
+    function burnBatch(uint256[] memory ids, uint256[] memory values) public onlyRole(BURNER_ROLE) {
+        _burnBatch(_msgSender(), ids, values);
     }
 
     // The following functions are overrides required by Solidity.
