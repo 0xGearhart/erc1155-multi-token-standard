@@ -7,4 +7,4 @@ import {HelperConfig} from "../../script/HelperConfig.s.sol";
 import {GameItems} from "../../src/GameItems.sol";
 import {Test, console2} from "forge-std/Test.sol";
 
-contract GameItemsTest is Test {}
+contract DeployGameItemsTest is Test {}
