@@ -7,10 +7,10 @@ DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf
 REPORTS_DIR := reports
 # Stage label is used in coverage artifact filenames (e.g., stage-0-coverage.txt).
 STAGE ?= local
-# Ignore noisy dependency-only warnings during coverage runs.
-COVERAGE_IGNORED_CODES ?= 2424 4591
 # Hide Foundry internal WARN spam while keeping real errors visible.
 RUST_LOG_COVERAGE ?= error
+# Work around Foundry external identifier crash in this environment.
+COVERAGE_OFFLINE ?= --offline
 
 all: install build
 
@@ -23,29 +23,28 @@ clean  :; forge clean
 remove :; rm -rf .gitmodules && rm -rf .git/modules/* && rm -rf lib && touch .gitmodules && git add . && git commit -m "modules"
 
 # Install dependencies
-install :; forge install cyfrin/foundry-devops@0.4.0 && forge install foundry-rs/forge-std@v1.13.0 && forge install openzeppelin/openzeppelin-contracts@v5.6.0
+install :; forge install cyfrin/foundry-devops@0.4.0 && forge install foundry-rs/forge-std@v1.14.0 && forge install openzeppelin/openzeppelin-contracts@v5.6.0
 
 # Build contracts
-build:; forge build
+build :; forge build
 
 # Run test suite
 test :; forge test 
 
 # Run forge coverage with minimal fuzz/invariant runs to save time
-coverage:
-	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code))
+coverage :; FOUNDRY_PROFILE=coverage forge coverage
 
 # Create test coverage report and save to .txt file
 # Use "coverage" foundry profile to prevent crashes due to excessive fuzz and invariant runs
 coverage-report:
 	@mkdir -p $(REPORTS_DIR)
-	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code)) --report debug > $(REPORTS_DIR)/coverage-debug.txt
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(COVERAGE_OFFLINE) --report debug > $(REPORTS_DIR)/coverage-debug.txt
 
 # Stage coverage artifact expected by plan.md
 stage-coverage:
 	@mkdir -p $(REPORTS_DIR)
 	# Keep the report in reports/ so each stage review has a fixed artifact path.
-	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(foreach code,$(COVERAGE_IGNORED_CODES),--ignored-error-codes $(code)) | tee $(REPORTS_DIR)/stage-$(STAGE)-coverage.txt
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(COVERAGE_OFFLINE) | tee $(REPORTS_DIR)/stage-$(STAGE)-coverage.txt
 
 # Baseline stage check flow
 # Single command to run the minimum gate checks before stage sign-off.
