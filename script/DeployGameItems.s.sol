@@ -14,7 +14,7 @@ contract DeployGameItems is Script, CodeConstants {
         helperConfig = new HelperConfig();
         networkConfig = helperConfig.getNetworkConfig();
         vm.startBroadcast(networkConfig.account);
-        new GameItems(msg.sender, msg.sender, GAME_ITEMS_URI);
+        new GameItems(msg.sender, msg.sender, msg.sender, msg.sender, GAME_ITEMS_ADMIN_DELAY, GAME_ITEMS_URI);
         vm.stopBroadcast();
     }
 }

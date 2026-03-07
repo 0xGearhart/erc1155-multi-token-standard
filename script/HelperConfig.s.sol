@@ -6,6 +6,7 @@ import {Script, console2} from "forge-std/Script.sol";
 
 contract CodeConstants {
     string constant GAME_ITEMS_URI = "";
+    uint48 constant GAME_ITEMS_ADMIN_DELAY = 1;
     // uint256 constant INITIAL_SUPPLY = 1 ether;
 
     // default local account and key for signing
