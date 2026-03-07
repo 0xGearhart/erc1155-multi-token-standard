@@ -111,6 +111,18 @@ Small chunks:
 3. Role administration matrix.
 - Document which role administers each role and deployment-time grant policy.
 - Default policy: grant required roles directly to intended addresses/contracts during deployment; no revoke step required in current plan.
+- Matrix (current):
+  - `DEFAULT_ADMIN_ROLE` admin of `MINTER_ROLE`
+  - `DEFAULT_ADMIN_ROLE` admin of `URI_SETTER_ROLE`
+  - `DEFAULT_ADMIN_ROLE` admin of `BURNER_ROLE`
+  - `DEFAULT_ADMIN_ROLE` is managed only by `AccessControlDefaultAdminRules` delayed transfer flow (begin/cancel/accept), not by `grantRole(DEFAULT_ADMIN_ROLE, ...)`.
+- Deployment-time role grant policy (current):
+  - `defaultAdmin` is constructor input.
+  - `minter` is constructor input.
+  - `uriSetter` is constructor input.
+  - `burner` is constructor input.
+  - `initialDelay` is constructor input, sourced from `CodeConstants` in scripts.
+  - For current deployments, scripts pass deployer for all role addresses until dedicated contracts are introduced.
 4. NatSpec + style conformance.
 - Add full NatSpec to all public/external methods and key internals.
 - Align layout/order/naming/visibility with Solidity style guide.
