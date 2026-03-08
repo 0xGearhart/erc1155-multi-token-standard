@@ -3,14 +3,9 @@
 .PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check snapshot gas-report anvil deploy
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
-# Keep CI artifacts grouped for stage-by-stage review evidence.
-REPORTS_DIR := reports
-# Stage label is used in coverage artifact filenames (e.g., stage-0-coverage.txt).
-STAGE ?= local
+
 # Hide Foundry internal WARN spam while keeping real errors visible.
 RUST_LOG_COVERAGE ?= error
-# Work around Foundry external identifier crash in this environment.
-COVERAGE_OFFLINE ?= --offline
 
 all: install build
 
@@ -37,14 +32,12 @@ coverage :; FOUNDRY_PROFILE=coverage forge coverage
 # Create test coverage report and save to .txt file
 # Use "coverage" foundry profile to prevent crashes due to excessive fuzz and invariant runs
 coverage-report:
-	@mkdir -p $(REPORTS_DIR)
-	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(COVERAGE_OFFLINE) --report debug > $(REPORTS_DIR)/coverage-debug.txt
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage --report debug > reports/coverage-debug.txt
 
 # Stage coverage artifact expected by plan.md
+# Keep reports in reports/ so each stage review has a fixed artifact path.
 stage-coverage:
-	@mkdir -p $(REPORTS_DIR)
-	# Keep the report in reports/ so each stage review has a fixed artifact path.
-	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage $(COVERAGE_OFFLINE) | tee $(REPORTS_DIR)/stage-$(STAGE)-coverage.txt
+	@RUST_LOG=$(RUST_LOG_COVERAGE) FOUNDRY_PROFILE=coverage forge coverage | tee reports/stage-$(ARGS)-coverage.txt
 
 # Baseline stage check flow
 # Single command to run the minimum gate checks before stage sign-off.
