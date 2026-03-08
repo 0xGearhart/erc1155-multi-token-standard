@@ -48,8 +48,7 @@ snapshot :; forge snapshot
 
 # Generate table showing gas cost for each function
 gas-report:
-	@mkdir -p $(REPORTS_DIR)
-	@FOUNDRY_PROFILE=coverage forge test --gas-report > $(REPORTS_DIR)/gas.txt
+	@FOUNDRY_PROFILE=coverage forge test --gas-report > reports/gas.txt
 
 anvil :; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
 
