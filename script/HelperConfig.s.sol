@@ -26,7 +26,11 @@ contract HelperConfig is Script, CodeConstants {
     error HelperConfig__InvalidNetwork(uint256 chainId);
 
     struct NetworkConfig {
-        address account;
+        address deployerAccount;
+        address defaultAdmin;
+        address minter;
+        address uriSetter;
+        address burner;
     }
 
     NetworkConfig public localNetworkConfig;
@@ -44,7 +48,7 @@ contract HelperConfig is Script, CodeConstants {
     function getNetworkConfig() public returns (NetworkConfig memory) {
         if (block.chainid == LOCAL_CHAIN_ID) {
             return _getOrCreateLocalConfig();
-        } else if (networkConfigs[block.chainid].account != address(0)) {
+        } else if (networkConfigs[block.chainid].deployerAccount != address(0)) {
             return networkConfigs[block.chainid];
         } else {
             revert HelperConfig__InvalidNetwork(block.chainid);
@@ -52,32 +56,32 @@ contract HelperConfig is Script, CodeConstants {
     }
 
     function _getEthMainnetConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getEthSepoliaConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getArbMainnetConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getArbSepoliaConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getBaseMainnetConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getBaseSepoliaConfig() public view returns (NetworkConfig memory) {
-        return NetworkConfig({account: vm.envAddress("DEFAULT_KEY_ADDRESS")});
+        return _buildConfig(vm.envAddress("DEFAULT_KEY_ADDRESS"));
     }
 
     function _getOrCreateLocalConfig() public returns (NetworkConfig memory) {
         // if mocks are already deployed, return struct
-        if (localNetworkConfig.account != address(0)) {
+        if (localNetworkConfig.deployerAccount != address(0)) {
             return localNetworkConfig;
         }
         // // otherwise, deploy mocks and save struct
@@ -85,8 +89,18 @@ contract HelperConfig is Script, CodeConstants {
         // vm.startBroadcast(ANVIL_DEFAULT_ACCOUNT);
         // vm.stopBroadcast();
 
-        localNetworkConfig = NetworkConfig({account: ANVIL_DEFAULT_ACCOUNT});
+        localNetworkConfig = _buildConfig(ANVIL_DEFAULT_ACCOUNT);
 
         return localNetworkConfig;
+    }
+
+    function _buildConfig(address deployerAccount) internal pure returns (NetworkConfig memory) {
+        return NetworkConfig({
+            deployerAccount: deployerAccount,
+            defaultAdmin: deployerAccount,
+            minter: deployerAccount,
+            uriSetter: deployerAccount,
+            burner: deployerAccount
+        });
     }
 }
