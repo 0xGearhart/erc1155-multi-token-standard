@@ -38,6 +38,23 @@ contract DeployGameItemsTest_local is Test, CodeConstants {
         assertTrue(gameItems.hasRole(gameItems.URI_SETTER_ROLE(), ANVIL_DEFAULT_ACCOUNT));
         assertTrue(gameItems.hasRole(gameItems.BURNER_ROLE(), ANVIL_DEFAULT_ACCOUNT));
     }
+
+    function testGetOrCreateLocalConfigCanBeCalledDirectly() external {
+        HelperConfig.NetworkConfig memory first = helperConfig._getOrCreateLocalConfig();
+        HelperConfig.NetworkConfig memory second = helperConfig._getOrCreateLocalConfig();
+
+        assertEq(first.deployerAccount, ANVIL_DEFAULT_ACCOUNT);
+        assertEq(first.defaultAdmin, ANVIL_DEFAULT_ACCOUNT);
+        assertEq(first.minter, ANVIL_DEFAULT_ACCOUNT);
+        assertEq(first.uriSetter, ANVIL_DEFAULT_ACCOUNT);
+        assertEq(first.burner, ANVIL_DEFAULT_ACCOUNT);
+
+        assertEq(second.deployerAccount, first.deployerAccount);
+        assertEq(second.defaultAdmin, first.defaultAdmin);
+        assertEq(second.minter, first.minter);
+        assertEq(second.uriSetter, first.uriSetter);
+        assertEq(second.burner, first.burner);
+    }
 }
 
 contract DeployGameItemsTest_ethMainnet is Test, CodeConstants {
