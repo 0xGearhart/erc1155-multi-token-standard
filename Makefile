@@ -1,6 +1,6 @@
 -include .env
 
-.PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check snapshot gas-report anvil deploy
+.PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check slither snapshot gas-report anvil deploy
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
@@ -49,6 +49,9 @@ snapshot :; forge snapshot
 # Generate table showing gas cost for each function
 gas-report:
 	@FOUNDRY_PROFILE=coverage forge test --gas-report > reports/gas.txt
+
+# Run slither on project contracts while suppressing dependency pragma-noise.
+slither:; slither . --exclude-dependencies --exclude pragma
 
 anvil :; anvil -m 'test test test test test test test test test test test junk' --steps-tracing --block-time 1
 
