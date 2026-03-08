@@ -22,7 +22,7 @@ contract Invariants is StdInvariant, Test {
 
     function setUp() external {
         gameItems = new GameItems(defaultAdmin, minter, uriSetter, burner, INITIAL_DELAY, INITIAL_URI);
-        handler = new Handler(gameItems, minter, uriSetter, burner, unauthorized);
+        handler = new Handler(gameItems, defaultAdmin, minter, uriSetter, burner, unauthorized);
         targetContract(address(handler));
     }
 
@@ -42,5 +42,14 @@ contract Invariants is StdInvariant, Test {
         assertFalse(gameItems.hasRole(gameItems.MINTER_ROLE(), unauthorized));
         assertFalse(gameItems.hasRole(gameItems.URI_SETTER_ROLE(), unauthorized));
         assertFalse(gameItems.hasRole(gameItems.BURNER_ROLE(), unauthorized));
+    }
+
+    function invariant_OnlyBurnerAccumulatesSuccessfulBurnVolume() external view {
+        for (uint256 id = 1; id <= handler.MAX_TRACKED_ID(); id++) {
+            assertEq(handler.burnedByActor(defaultAdmin, id), 0, "defaultAdmin should never burn");
+            assertEq(handler.burnedByActor(minter, id), 0, "minter should never burn");
+            assertEq(handler.burnedByActor(uriSetter, id), 0, "uriSetter should never burn");
+            assertEq(handler.burnedByActor(unauthorized, id), 0, "unauthorized should never burn");
+        }
     }
 }

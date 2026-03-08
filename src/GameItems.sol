@@ -29,8 +29,15 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
     bytes32 public constant BURNER_ROLE = keccak256("BURNER_ROLE");
 
     /**
+     * @notice Emitted when the contract base URI is updated.
+     * @param setter Address that performed the URI update.
+     * @param newUri New base URI value.
+     */
+    event BaseURIUpdated(address indexed setter, string newUri);
+
+    /**
      * @notice Initializes role assignments and ERC-1155 base URI.
-     * @param defaultAdmin Initial default admin managed by AccessControlDefaultAdminRules.
+     * @param initialDefaultAdmin Initial default admin managed by AccessControlDefaultAdminRules.
      * @param minter Address granted MINTER_ROLE.
      * @param uriSetter Address granted URI_SETTER_ROLE.
      * @param burner Address granted BURNER_ROLE.
@@ -38,7 +45,7 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      * @param gameItemsUri Initial base URI used by ERC-1155 metadata.
      */
     constructor(
-        address defaultAdmin,
+        address initialDefaultAdmin,
         address minter,
         address uriSetter,
         address burner,
@@ -46,7 +53,7 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
         string memory gameItemsUri
     )
         ERC1155(gameItemsUri)
-        AccessControlDefaultAdminRules(initialDelay, defaultAdmin)
+        AccessControlDefaultAdminRules(initialDelay, initialDefaultAdmin)
     {
         _grantRole(MINTER_ROLE, minter);
         _grantRole(URI_SETTER_ROLE, uriSetter);
@@ -57,8 +64,9 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      * @notice Updates the base URI for all token IDs.
      * @param newUri New base URI string.
      */
-    function setURI(string memory newUri) public onlyRole(URI_SETTER_ROLE) {
+    function setURI(string calldata newUri) external onlyRole(URI_SETTER_ROLE) {
         _setURI(newUri);
+        emit BaseURIUpdated(_msgSender(), newUri);
     }
 
     /**
@@ -68,7 +76,7 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      * @param amount Quantity to mint.
      * @param data Additional data passed to receiver hooks.
      */
-    function mint(address account, uint256 id, uint256 amount, bytes memory data) public onlyRole(MINTER_ROLE) {
+    function mint(address account, uint256 id, uint256 amount, bytes calldata data) external onlyRole(MINTER_ROLE) {
         _mint(account, id, amount, data);
     }
 
@@ -81,11 +89,11 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      */
     function mintBatch(
         address to,
-        uint256[] memory ids,
-        uint256[] memory amounts,
-        bytes memory data
+        uint256[] calldata ids,
+        uint256[] calldata amounts,
+        bytes calldata data
     )
-        public
+        external
         onlyRole(MINTER_ROLE)
     {
         _mintBatch(to, ids, amounts, data);
@@ -96,7 +104,7 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      * @param id Token ID to burn.
      * @param value Quantity to burn.
      */
-    function burn(uint256 id, uint256 value) public onlyRole(BURNER_ROLE) {
+    function burn(uint256 id, uint256 value) external onlyRole(BURNER_ROLE) {
         _burn(_msgSender(), id, value);
     }
 
@@ -105,7 +113,7 @@ contract GameItems is ERC1155, AccessControlDefaultAdminRules, ERC1155Supply {
      * @param ids Token IDs to burn.
      * @param values Quantities per token ID.
      */
-    function burnBatch(uint256[] memory ids, uint256[] memory values) public onlyRole(BURNER_ROLE) {
+    function burnBatch(uint256[] calldata ids, uint256[] calldata values) external onlyRole(BURNER_ROLE) {
         _burnBatch(_msgSender(), ids, values);
     }
 

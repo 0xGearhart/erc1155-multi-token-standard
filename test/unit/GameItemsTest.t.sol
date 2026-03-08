@@ -28,6 +28,8 @@ contract GameItemsTest is Test {
     uint256 internal constant SECOND_ID = 2;
     uint256 internal constant AMOUNT = 10;
 
+    event BaseURIUpdated(address indexed setter, string newUri);
+
     function setUp() public {
         gameItems = new GameItems(defaultAdmin, minter, uriSetter, burner, INITIAL_DELAY, INITIAL_URI);
     }
@@ -75,6 +77,16 @@ contract GameItemsTest is Test {
         vm.prank(uriSetter);
         gameItems.setURI(updatedUri);
         assertEq(gameItems.uri(123), updatedUri);
+    }
+
+    function testSetURIEmitsBaseURIUpdatedEvent() public {
+        string memory updatedUri = "ipfs://event-check/{id}.json";
+
+        vm.expectEmit(true, false, false, true, address(gameItems));
+        emit BaseURIUpdated(uriSetter, updatedUri);
+
+        vm.prank(uriSetter);
+        gameItems.setURI(updatedUri);
     }
 
     function testMintRevertsForNonMinter() public {
@@ -197,6 +209,73 @@ contract GameItemsTest is Test {
         vm.prank(burner);
         vm.expectRevert(abi.encodeWithSelector(IERC1155Errors.ERC1155InvalidArrayLength.selector, 2, 1));
         gameItems.burnBatch(ids, burnAmounts);
+    }
+
+    function testFuzzBurnBatchBurnsFromBurnerBalance(
+        uint96 firstMintAmount,
+        uint96 secondMintAmount,
+        uint96 firstBurnAmount,
+        uint96 secondBurnAmount
+    )
+        public
+    {
+        uint256 mintedFirst = bound(uint256(firstMintAmount), 1, type(uint96).max);
+        uint256 mintedSecond = bound(uint256(secondMintAmount), 1, type(uint96).max);
+        uint256 burnedFirst = bound(uint256(firstBurnAmount), 1, mintedFirst);
+        uint256 burnedSecond = bound(uint256(secondBurnAmount), 1, mintedSecond);
+
+        uint256[] memory ids = new uint256[](2);
+        ids[0] = FIRST_ID;
+        ids[1] = SECOND_ID;
+
+        uint256[] memory mintedAmounts = new uint256[](2);
+        mintedAmounts[0] = mintedFirst;
+        mintedAmounts[1] = mintedSecond;
+
+        vm.prank(minter);
+        gameItems.mintBatch(burner, ids, mintedAmounts, "");
+
+        uint256[] memory burnedAmounts = new uint256[](2);
+        burnedAmounts[0] = burnedFirst;
+        burnedAmounts[1] = burnedSecond;
+
+        vm.prank(burner);
+        gameItems.burnBatch(ids, burnedAmounts);
+
+        assertEq(gameItems.balanceOf(burner, FIRST_ID), mintedFirst - burnedFirst);
+        assertEq(gameItems.balanceOf(burner, SECOND_ID), mintedSecond - burnedSecond);
+        assertEq(gameItems.totalSupply(FIRST_ID), mintedFirst - burnedFirst);
+        assertEq(gameItems.totalSupply(SECOND_ID), mintedSecond - burnedSecond);
+    }
+
+    function testFuzzUnauthorizedBurnAlwaysReverts(address caller, uint256 id, uint256 amount) public {
+        vm.assume(caller != burner);
+        id = bound(id, 1, type(uint128).max);
+        amount = bound(amount, 1, type(uint96).max);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, caller, gameItems.BURNER_ROLE())
+        );
+        vm.prank(caller);
+        gameItems.burn(id, amount);
+    }
+
+    function testFuzzDefaultAdminTransferRevertsBeforeDelay(uint8 earlyOffset) public {
+        vm.prank(defaultAdmin);
+        gameItems.beginDefaultAdminTransfer(newDefaultAdmin);
+
+        (address pendingAdmin, uint48 schedule) = gameItems.pendingDefaultAdmin();
+        assertEq(pendingAdmin, newDefaultAdmin);
+
+        uint256 maxEarly = INITIAL_DELAY == 0 ? 0 : INITIAL_DELAY - 1;
+        uint256 offset = bound(uint256(earlyOffset), 0, maxEarly);
+        vm.warp(block.timestamp + offset);
+
+        vm.prank(newDefaultAdmin);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControlDefaultAdminRules.AccessControlEnforcedDefaultAdminDelay.selector, schedule)
+        );
+        gameItems.acceptDefaultAdminTransfer();
     }
 
     function testSupportsInterfaceReturnsExpectedValues() public view {

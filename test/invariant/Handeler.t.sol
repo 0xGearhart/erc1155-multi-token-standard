@@ -8,6 +8,7 @@ import {Test} from "forge-std/Test.sol";
 
 contract Handler is Test {
     GameItems public immutable gameItems;
+    address public immutable defaultAdmin;
     address public immutable minter;
     address public immutable uriSetter;
     address public immutable burner;
@@ -17,9 +18,18 @@ contract Handler is Test {
 
     mapping(uint256 id => uint256 amount) public mintedById;
     mapping(uint256 id => uint256 amount) public burnedById;
+    mapping(address actor => mapping(uint256 id => uint256 amount)) public burnedByActor;
 
-    constructor(GameItems gameItems_, address minter_, address uriSetter_, address burner_, address unauthorized_) {
+    constructor(
+        GameItems gameItems_,
+        address defaultAdmin_,
+        address minter_,
+        address uriSetter_,
+        address burner_,
+        address unauthorized_
+    ) {
         gameItems = gameItems_;
+        defaultAdmin = defaultAdmin_;
         minter = minter_;
         uriSetter = uriSetter_;
         burner = burner_;
@@ -62,6 +72,7 @@ contract Handler is Test {
         vm.prank(burner);
         gameItems.burn(id, amount);
         burnedById[id] += amount;
+        burnedByActor[burner][id] += amount;
     }
 
     function burnAsUnauthorized(uint256 id, uint256 amount) external {
@@ -92,5 +103,43 @@ contract Handler is Test {
         );
         vm.prank(unauthorized);
         gameItems.setURI(newUri);
+    }
+
+    function burnByRandomActor(uint256 actorSeed, uint256 id, uint256 amount) external {
+        id = bound(id, 1, MAX_TRACKED_ID);
+        address actor = _pickActor(actorSeed);
+
+        if (actor == burner) {
+            uint256 balance = gameItems.balanceOf(burner, id);
+            if (balance == 0) {
+                vm.prank(minter);
+                gameItems.mint(burner, id, 1, "");
+                mintedById[id] += 1;
+                balance = 1;
+            }
+            amount = bound(amount, 1, balance);
+
+            vm.prank(burner);
+            gameItems.burn(id, amount);
+            burnedById[id] += amount;
+            burnedByActor[burner][id] += amount;
+            return;
+        }
+
+        amount = bound(amount, 1, type(uint96).max);
+        vm.expectRevert(
+            abi.encodeWithSelector(IAccessControl.AccessControlUnauthorizedAccount.selector, actor, gameItems.BURNER_ROLE())
+        );
+        vm.prank(actor);
+        gameItems.burn(id, amount);
+    }
+
+    function _pickActor(uint256 seed) internal view returns (address) {
+        uint256 choice = seed % 5;
+        if (choice == 0) return defaultAdmin;
+        if (choice == 1) return minter;
+        if (choice == 2) return uriSetter;
+        if (choice == 3) return burner;
+        return unauthorized;
     }
 }

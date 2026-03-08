@@ -156,6 +156,11 @@ Sign-off artifacts:
 ### Stage 3 - Invariant and Security-Focused Test Layer
 Objective: validate protocol properties beyond unit behavior.
 
+Status:
+- Chunk 1 complete: handler actions implemented for authorized/unauthorized actors.
+- Chunk 2 complete: invariants added for supply conservation and role safety boundaries, including burner-only successful burn accounting.
+- Chunk 3 complete: fuzz targets added for batch burn edge cases and admin delay transition behavior.
+
 Small chunks:
 1. Build handler actions for authorized/unauthorized actors.
 2. Add invariants for supply conservation and role safety boundaries.
