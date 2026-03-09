@@ -1,8 +1,8 @@
-# Project Name
+# ERC-1155 GameItems
 
 ## Table of Contents
 
-- [Project Name](#project-name)
+- [ERC-1155 GameItems](#erc-1155-gameitems)
   - [Table of Contents](#table-of-contents)
   - [About](#about)
     - [Key Features](#key-features)
@@ -31,64 +31,64 @@
 
 ## About
 
-[1-2 sentence description of what the contract does and its purpose]
+`GameItems` is a role-gated ERC-1155 contract for game item minting, role-restricted burns, and base URI management. This repository includes deployment scripts, multi-chain integration tests, invariants, and stage-gated quality checks.
 
 ### Key Features
 
-- Feature 1
-- Feature 2
-- Feature 3
+- OpenZeppelin-based ERC-1155 token with per-ID total supply tracking.
+- Role-based minting, burning, and URI control.
+- Delayed default-admin handoff using `AccessControlDefaultAdminRules`.
+- Integration tests across local + supported forked networks.
+- Invariant and fuzz testing for role boundaries and supply correctness.
 
 **Tech Stack:**
-- Solidity 0.8.x
-- Foundry
-- [Other dependencies]
+- Solidity `0.8.33`
+- Foundry (`forge`, `cast`, `anvil`)
+- OpenZeppelin Contracts `v5.6.0`
+- Slither + Aderyn static analysis
 
 ### Architecture
 
-```
+```text
 ┌─────────────────────────────────────────────────────────────┐
-│                         Users/EOAs                          │
-└──────────────┬──────────────────────────────┬───────────────┘
-               │                              │
-               │ fund()                       │ withdraw()
-               │                              │ (owner only)
-               ▼                              ▼
+│                        Player / Admin EOAs                  │
+└───────────────┬───────────────────────────┬─────────────────┘
+                │                           │
+                │ role-gated calls          │ governance actions
+                ▼                           ▼
 ┌──────────────────────────────────────────────────────────────┐
+│                           GameItems                          │
+│  ERC1155 + ERC1155Supply + AccessControlDefaultAdminRules    │
 │                                                              │
-│                      Main Contract                           │
-│                                                              │
-│  ┌────────────────┐        ┌──────────────────┐              │
-│  │   Funders      │        │   Funding Goals  │              │
-│  │   Tracking     │        │   & Amounts      │              │
-│  └────────────────┘        └──────────────────┘              │
-│                                                              │
-└───────────────────┬──────────────────────────────────────────┘
-                    │
-                    │ getConversionRate()
-                    │
-                    ▼
-          ┌─────────────────────┐
-          │  Chainlink Oracle   │
-          │   Price Feed        │
-          └─────────────────────┘
+│  - mint/mintBatch   -> MINTER_ROLE                           │
+│  - setURI           -> URI_SETTER_ROLE                       │
+│  - burn/burnBatch   -> BURNER_ROLE (caller balance only)     │
+│  - delayed admin transfer -> DEFAULT_ADMIN_ROLE lifecycle    │
+└──────────────────────────────────────────────────────────────┘
+
 ```
 
 **Repository Structure:**
-```
-project-name/
+```text
+erc1155-multi-token-standard/
 ├── src/
-│   ├── MainContract.sol       # Core contract logic
-│   └── PriceConverter.sol     # Helper library (if applicable)
+│   └── GameItems.sol                    # Core ERC-1155 contract, roles, burn policy, URI updates
 ├── script/
-│   ├── DeployContract.s.sol   # Deployment script
-│   └── Interactions.s.sol     # Interaction scripts
+│   ├── HelperConfig.s.sol               # Chain IDs, deployment constants, and per-network role config
+│   └── DeployGameItems.s.sol            # Broadcast deployment entrypoint that instantiates GameItems
 ├── test/
 │   ├── unit/
-│   │   └── ContractTest.t.sol
-│   └── integration/
-│       └── InteractionsTest.t.sol
-└── lib/                        # Dependencies
+│   │   └── GameItemsTest.t.sol          # Unit + fuzz tests for contract behavior and event/revert coverage
+│   ├── integration/
+│   │   └── DeployGameItemsTest.t.sol    # Deployment script tests on local + forked chains
+│   └── invariant/
+│       ├── Handeler.t.sol               # Stateful handler actions (authorized and unauthorized actors)
+│       └── Invariants.t.sol             # Protocol invariants for supply and role safety boundaries
+├── Makefile                             # Standardized build/test/coverage/slither/deploy commands
+├── foundry.toml                         # Foundry profiles, remappings, fuzz/invariant config
+├── .env.example                         # Required environment variable template for setup
+├── plan.md                              # Stage-by-stage execution plan and gate checklist
+└── README.md                            # Project documentation and operator runbook
 ```
 
 ## Getting Started
@@ -97,14 +97,15 @@ project-name/
 
 - [git](https://git-scm.com/book/en/v2/Getting-Started-Installing-Git)
   - Verify installation: `git --version`
-- [foundry](https://getfoundry.sh/)
+- [Foundry](https://getfoundry.sh/)
   - Verify installation: `forge --version`
+- Optional but recommended: [Slither](https://github.com/crytic/slither)
 
 ### Quickstart
 
 ```bash
-git clone https://github.com/yourusername/project-name
-cd project-name
+git clone https://github.com/0xGearhart/erc1155-multi-token-standard
+cd erc1155-multi-token-standard
 make
 ```
 
@@ -117,10 +118,15 @@ make
 
 2. **Configure your `.env` file:**
    ```bash
-   SEPOLIA_RPC_URL=your_sepolia_rpc_url_here
-   MAINNET_RPC_URL=your_mainnet_rpc_url_here
-   ETHERSCAN_API_KEY=your_etherscan_api_key_here
-   DEFAULT_KEY_ADDRESS=public_address_of_your_encrypted_private_key_here
+   MAINNET_RPC_URL=your_mainnet_rpc_url
+   SEPOLIA_RPC_URL=your_sepolia_rpc_url
+   ARB_MAINNET_RPC_URL=your_mainnet_rpc_url
+   ARB_SEPOLIA_RPC_URL=your_sepolia_rpc_url
+   BASE_MAINNET_RPC_URL=your_mainnet_rpc_url
+   BASE_SEPOLIA_RPC_URL=your_sepolia_rpc_url
+   LINEA_SEPOLIA_RPC_URL=your_sepolia_rpc_url
+   ETHERSCAN_API_KEY=your_etherscan_api_key
+   DEFAULT_KEY_ADDRESS=public_address_of_your_encrypted_private_key
    ```
 
 3. **Get testnet ETH:**
@@ -144,15 +150,13 @@ cast wallet import <account_name> --interactive
 **⚠️ Security Warning:**
 - Never commit your `.env` file
 - Never use your mainnet private key for testing
-- Use a separate wallet with only testnet funds
+- Use a separate wallet with only testnet funds for development
 
 ## Usage
 
-[Short description of usage if needed]
-
 ### Build
 
-Compile the contracts:
+Compile contracts:
 
 ```bash
 forge build
@@ -172,10 +176,12 @@ Run tests with verbosity:
 forge test -vvv
 ```
 
-Run specific test:
+Run specific test targets:
 
 ```bash
-forge test --match-test testFunctionName
+forge test --match-path test/unit/GameItemsTest.t.sol
+forge test --match-path test/integration/DeployGameItemsTest.t.sol
+forge test --match-contract Invariants
 ```
 
 ### Test Coverage
@@ -183,10 +189,10 @@ forge test --match-test testFunctionName
 Generate coverage report:
 
 ```bash
-forge coverage
+make coverage
 ```
 
-Create test coverage report and save to .txt file:
+Create test coverage report and save to `.txt` file:
 
 ```bash
 make coverage-report
@@ -211,24 +217,44 @@ make deploy
 [Examples of how to interact with your contract using cast or scripts]
 
 ```bash
-# Example command
-cast send <CONTRACT_ADDRESS> "functionName()" --rpc-url $SEPOLIA_RPC_URL --account defaultKey
+# Grant MINTER_ROLE (caller must be default admin)
+cast send <GAME_ITEMS_ADDRESS> \
+  "grantRole(bytes32,address)" \
+  $(cast keccak "MINTER_ROLE") <MINTER_ADDRESS> \
+  --rpc-url <RPC_URL> --account defaultKey
+
+# Mint token ID 1 amount 10
+cast send <GAME_ITEMS_ADDRESS> \
+  "mint(address,uint256,uint256,bytes)" \
+  <TO_ADDRESS> 1 10 0x \
+  --rpc-url <RPC_URL> --account defaultKey
+
+# Update base URI
+cast send <GAME_ITEMS_ADDRESS> \
+  "setURI(string)" "ipfs://<CID>/{id}.json" \
+  --rpc-url <RPC_URL> --account defaultKey
 ```
 
 ## Deployment
 
 ### Deploy to Testnet
 
-Deploy to Sepolia:
+Deploy using Makefile network args:
 
 ```bash
-make deploy ARGS="--network sepolia"
+make deploy ARGS="--network eth-sepolia"
+make deploy ARGS="--network arb-sepolia"
+make deploy ARGS="--network base-sepolia"
 ```
 
 Or using forge directly:
 
 ```bash
-forge script script/DeployContract.s.sol:DeployContract --rpc-url $SEPOLIA_RPC_URL --account defaultKey --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv
+forge script script/DeployGameItems.s.sol:DeployGameItems \
+  --rpc-url $ETH_SEPOLIA_RPC_URL \
+  --account defaultKey \
+  --broadcast --verify \
+  --etherscan-api-key $ETHERSCAN_API_KEY -vvvv
 ```
 
 ### Verify Contract
@@ -236,15 +262,21 @@ forge script script/DeployContract.s.sol:DeployContract --rpc-url $SEPOLIA_RPC_U
 If automatic verification fails:
 
 ```bash
-forge verify-contract <CONTRACT_ADDRESS> src/MainContract.sol:MainContract --chain-id 11155111 --etherscan-api-key $ETHERSCAN_API_KEY
+forge verify-contract <CONTRACT_ADDRESS> src/GameItems.sol:GameItems \
+  --chain-id 11155111 \
+  --etherscan-api-key $ETHERSCAN_API_KEY
 ```
 
 ### Deployment Addresses
 
-| Network | Contract Address | Explorer                                          |
-| ------- | ---------------- | ------------------------------------------------- |
-| Sepolia | `TBD`            | [View on Etherscan](https://sepolia.etherscan.io) |
-| Mainnet | `TBD`            | [View on Etherscan](https://etherscan.io)         |
+| Network          | Contract Address | Explorer                                             |
+| ---------------- | ---------------- | ---------------------------------------------------- |
+| Ethereum Mainnet | `TBD`            | [etherscan.io](https://etherscan.io)                 |
+| Ethereum Sepolia | `TBD`            | [sepolia.etherscan.io](https://sepolia.etherscan.io) |
+| Arbitrum Mainnet | `TBD`            | [arbiscan.io](https://arbiscan.io)                   |
+| Arbitrum Sepolia | `TBD`            | [sepolia.arbiscan.io](https://sepolia.arbiscan.io)   |
+| Base Mainnet     | `TBD`            | [basescan.org](https://basescan.org)                 |
+| Base Sepolia     | `TBD`            | [sepolia.basescan.org](https://sepolia.basescan.org) |
 
 ## Security
 
@@ -259,37 +291,35 @@ For production use, consider:
 
 ### Access Control (Roles & Permissions)
 
-[Examples from previous project to be replaced by actual project layout in brackets below. Remove section if no roles or ownership used]
+The protocol uses OpenZeppelin `AccessControlDefaultAdminRules` with delayed admin transfer.
 
-[The protocol implements OpenZeppelin's `AccessControl` and `Ownable` for fine-grained permission management:]
+**Roles:**
+- **`DEFAULT_ADMIN_ROLE`**
+  - Admin of `MINTER_ROLE`, `URI_SETTER_ROLE`, and `BURNER_ROLE`.
+  - Transferred using delayed `beginDefaultAdminTransfer` / `acceptDefaultAdminTransfer` flow.
+- **`MINTER_ROLE`**
+  - Can call `mint` and `mintBatch`.
+- **`URI_SETTER_ROLE`**
+  - Can call `setURI`.
+- **`BURNER_ROLE`**
+  - Can call `burn` and `burnBatch`.
+  - Burns from caller-owned balances only.
 
-**Roles:** [Remove if roles are not used]
-- [**`MINT_AND_BURN_ROLE`**: Critical role for minting and burning RBT tokens
-  - Granted to `Vault` contract (for deposit/withdrawal operations)
-  - Granted to `RebaseTokenPool` contract (for cross-chain operations)
-  - Only the owner can grant this role]
-
-**Owner Permissions:**  [Remove if owner is not used]
-- [`setInterestRate()`: Decrease the global interest rate (can only decrease, never increase)]
-- [`grantMintAndBurnRole()`: Grant minting/burning permissions to authorized contracts]
-
-**Access Control Vulnerabilities & Mitigations:** 
-- [⚠️ **Risk**: Owner could grant `MINT_AND_BURN_ROLE` to malicious actor
-  - **Mitigation**: Use multi-sig wallet for owner role in production]
-- [⚠️ **Risk**: Owner control of interest rate changes
-  - **Mitigation**: Decentralize rate changes through governance in production]
+**Access Control Vulnerabilities & Mitigations:**
+- ⚠️ **Risk**: Centralized key controls all roles in default setup.
+  - **Mitigation**: Move admin to multisig and split operational roles across dedicated addresses/contracts.
+- ⚠️ **Risk**: Incorrect role assignment during deployment.
+  - **Mitigation**: Verify role state in integration tests and post-deploy scripts.
 
 ### Known Limitations
 
-- [Limitation 1 - e.g., centralized owner control]
-- [Limitation 2 - e.g., no withdrawal limits]
-- [Limitation 3 - e.g., relies on external oracle]
+- Current deployment defaults grant all roles to deployer/default key.
+- Placeholder URI remains until metadata/IPFS stage is finalized.
+- Shop/crafting contract integration is planned but not yet implemented.
 
 **Centralization Risks:**
-- [Explain any admin/owner privileges]
-
-**Oracle Dependencies:**
-- [Explain reliance on Chainlink or other oracles]
+- Admin can grant/revoke non-admin roles.
+- Operational mistakes in key management can impact mint/burn/URI authority.
 
 ## Gas Optimization
 
@@ -299,7 +329,7 @@ For production use, consider:
 | `function2` | ~XXX,XXX |
 | `function3` | ~XXX,XXX |
 
-Generate gas report and save to .txt file:
+Generate gas report and save to `.txt` file:
 
 ```bash
 make gas-report

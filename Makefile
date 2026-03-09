@@ -47,8 +47,7 @@ stage-check: build test stage-coverage
 snapshot :; forge snapshot
 
 # Generate table showing gas cost for each function
-gas-report:
-	@FOUNDRY_PROFILE=coverage forge test --gas-report > reports/gas.txt
+gas-report:; FOUNDRY_PROFILE=coverage forge test --gas-report > gas.txt
 
 # Run slither on project contracts while suppressing dependency pragma-noise.
 slither:; slither . --exclude-dependencies --exclude pragma
