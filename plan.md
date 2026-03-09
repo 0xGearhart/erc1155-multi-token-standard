@@ -185,8 +185,34 @@ Sign-off artifacts:
 - Concise README with core setup, deployment, and security notes.
 - 100% stage-scope coverage target maintained.
 
-### Stage 5 - Advanced Mechanics Discovery (Deferred, No Build Yet)
-Objective: evaluate and select mechanics without implementation commitment yet.
+### Stage 5 - Metadata Build Pipeline + IPFS URI Flow
+Objective: produce deterministic metadata and publishable IPFS-backed URIs before advanced mechanics are selected.
+
+Small chunks:
+1. Placeholder URI policy in earlier stages.
+- Use a mock URI during Stages 1-5.
+2. Metadata schema definition.
+- Define required JSON fields for each item type.
+- Add validation rules for deterministic generation.
+3. Metadata generation scripts.
+- Generate metadata files from structured source input.
+- Ensure stable ordering and reproducible output hashes.
+4. IPFS folder workflow scripts.
+- Add script path for preparing upload folder and capturing CID.
+- Use folder-based URI strategy (`ipfs://<CID>/{id}.json`) rather than per-token URI storage.
+ - Enforce ERC-1155 ID filename convention for `{id}` substitution (lowercase, 64-hex-character token ID filenames).
+5. Contract/deploy integration.
+- Wire final base URI input to deployment flow.
+- Add tests/assertions for URI construction expectations.
+6. Documentation.
+- Add metadata generation, pinning, CID update, and redeploy/update process to README.md.
+
+Sign-off artifacts:
+- Reproducible metadata output and CID workflow.
+- 100% stage-scope coverage for URI/metadata-related contract logic and scripts.
+
+### Stage 6 - Advanced Mechanics Discovery (Deferred, No Build Yet)
+Objective: evaluate and select mechanics only after metadata/IPFS workflow is complete.
 
 Backlog ideas to evaluate:
 1. Crafting recipes (burn specific IDs for upgraded IDs).
@@ -209,32 +235,6 @@ Selection process for this stage:
 Sign-off artifacts:
 - Ranked shortlist and explicit inclusion/exclusion rationale.
 - Next-stage implementation spec drafted from selected mechanics.
-
-### Stage 6 - Metadata Build Pipeline + IPFS URI Flow (Finalized Later)
-Objective: produce deterministic metadata and publishable IPFS-backed URIs after core mechanics direction is settled.
-
-Small chunks:
-1. Placeholder URI policy in earlier stages.
-- Use a mock URI during Stages 1-5.
-2. Metadata schema definition.
-- Define required JSON fields for each item type.
-- Add validation rules for deterministic generation.
-3. Metadata generation scripts.
-- Generate metadata files from structured source input.
-- Ensure stable ordering and reproducible output hashes.
-4. IPFS folder workflow scripts.
-- Add script path for preparing upload folder and capturing CID.
-- Use folder-based URI strategy (`ipfs://<CID>/{id}.json`) rather than per-token URI storage.
- - Enforce ERC-1155 ID filename convention for `{id}` substitution (lowercase, 64-hex-character token ID filenames).
-5. Contract/deploy integration.
-- Wire final base URI input to deployment flow.
-- Add tests/assertions for URI construction expectations.
-6. Documentation.
-- Add runbook for metadata generation, pinning, CID update, and redeploy/update process.
-
-Sign-off artifacts:
-- Reproducible metadata output and CID workflow.
-- 100% stage-scope coverage for URI/metadata-related contract logic and scripts.
 
 ### Working Defaults (Current)
 - Scope now: core token + deployment + testing + docs, with metadata/IPFS finalized last.
