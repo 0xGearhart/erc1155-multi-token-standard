@@ -3,7 +3,7 @@
 pragma solidity 0.8.33;
 
 import {GameItems} from "../../src/GameItems.sol";
-import {Handler} from "./Handeler.t.sol";
+import {Handler} from "./Handler.t.sol";
 import {StdInvariant} from "forge-std/StdInvariant.sol";
 import {Test} from "forge-std/Test.sol";
 
