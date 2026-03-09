@@ -1,6 +1,6 @@
 -include .env
 
-.PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check slither snapshot gas-report anvil deploy
+.PHONY: all reset clean remove install build test coverage coverage-report stage-coverage stage-check slither snapshot gas-report anvil deploy metadata-generate metadata-pin
 
 DEFAULT_ANVIL_KEY := 0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80
 
@@ -83,3 +83,11 @@ endif
 # deploy contracts with script
 deploy:
 	@forge script script/DeployGameItems.s.sol:DeployGameItems $(NETWORK_ARGS)
+
+# Generate deterministic ERC-1155 metadata JSON files.
+metadata-generate:
+	@./scripts/metadata/generate_metadata.py --source metadata/source/items.json --out metadata/build
+
+# Pin metadata folder to IPFS and print URI template.
+metadata-pin:
+	@./scripts/metadata/pin_ipfs.sh metadata/build

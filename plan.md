@@ -188,6 +188,12 @@ Sign-off artifacts:
 ### Stage 5 - Metadata Build Pipeline + IPFS URI Flow
 Objective: produce deterministic metadata and publishable IPFS-backed URIs before advanced mechanics are selected.
 
+Status:
+- Chunk 1 complete: placeholder URI policy remains in effect for early stages.
+- Chunk 2 complete: metadata schema and source input structure added.
+- Chunk 3 complete: deterministic metadata generation script added.
+- Chunk 4 complete: IPFS pin helper script and Makefile commands added.
+
 Small chunks:
 1. Placeholder URI policy in earlier stages.
 - Use a mock URI during Stages 1-5.

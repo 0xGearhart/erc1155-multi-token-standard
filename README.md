@@ -198,6 +198,20 @@ Create test coverage report and save to `.txt` file:
 make coverage-report
 ```
 
+### Metadata + IPFS
+
+Generate deterministic ERC-1155 metadata files:
+
+```bash
+make metadata-generate
+```
+
+Pin generated metadata folder to IPFS and print base URI:
+
+```bash
+make metadata-pin
+```
+
 ### Deploy Locally
 
 Start a local Anvil node:
