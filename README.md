@@ -82,7 +82,7 @@ erc1155-multi-token-standard/
 │   ├── integration/
 │   │   └── DeployGameItemsTest.t.sol    # Deployment script tests on local + forked chains
 │   └── invariant/
-│       ├── Handeler.t.sol               # Stateful handler actions (authorized and unauthorized actors)
+│       ├── Handler.t.sol               # Stateful handler actions (authorized and unauthorized actors)
 │       └── Invariants.t.sol             # Protocol invariants for supply and role safety boundaries
 ├── Makefile                             # Standardized build/test/coverage/slither/deploy commands
 ├── foundry.toml                         # Foundry profiles, remappings, fuzz/invariant config
