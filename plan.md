@@ -175,14 +175,14 @@ Sign-off artifacts:
 ### Stage 4 - Docs and Operational Readiness
 Objective: finish project documentation for repeatable operation.
 
+Status:
+- Chunk 1 complete: README template replaced with project-specific documentation while preserving template layout.
+
 Small chunks:
 1. Replace README template with project-specific docs.
-2. Add role/governance operations guide (including delayed admin lifecycle).
-3. Add deployment + verification playbooks.
-4. Add testing/coverage troubleshooting guide.
 
 Sign-off artifacts:
-- Operator-ready docs for local/testnet/mainnet workflows.
+- Concise README with core setup, deployment, and security notes.
 - 100% stage-scope coverage target maintained.
 
 ### Stage 5 - Advanced Mechanics Discovery (Deferred, No Build Yet)
