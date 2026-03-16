@@ -118,14 +118,15 @@ make
 
 2. **Configure your `.env` file:**
    ```bash
-   MAINNET_RPC_URL=your_mainnet_rpc_url
-   SEPOLIA_RPC_URL=your_sepolia_rpc_url
+   ETH_MAINNET_RPC_URL=your_mainnet_rpc_url
+   ETH_SEPOLIA_RPC_URL=your_sepolia_rpc_url
    ARB_MAINNET_RPC_URL=your_mainnet_rpc_url
    ARB_SEPOLIA_RPC_URL=your_sepolia_rpc_url
    BASE_MAINNET_RPC_URL=your_mainnet_rpc_url
    BASE_SEPOLIA_RPC_URL=your_sepolia_rpc_url
    LINEA_SEPOLIA_RPC_URL=your_sepolia_rpc_url
    ETHERSCAN_API_KEY=your_etherscan_api_key
+   GAME_ITEMS_URI=ipfs://<CID>/{id}.json
    DEFAULT_KEY_ADDRESS=public_address_of_your_encrypted_private_key
    ```
 
@@ -211,6 +212,12 @@ Pin generated metadata folder to IPFS and print base URI:
 ```bash
 make metadata-pin
 ```
+
+Minimal update flow:
+1. Edit `metadata/source/items.json`.
+2. Run `make metadata-generate`.
+3. Run `make metadata-pin` and copy the returned CID.
+4. Set `GAME_ITEMS_URI=ipfs://<CID>/{id}.json` in `.env`, then redeploy.
 
 ### Deploy Locally
 

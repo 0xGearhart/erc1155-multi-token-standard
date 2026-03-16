@@ -193,6 +193,8 @@ Status:
 - Chunk 2 complete: metadata schema and source input structure added.
 - Chunk 3 complete: deterministic metadata generation script added.
 - Chunk 4 complete: IPFS pin helper script and Makefile commands added.
+- Chunk 5 complete: deployment script URI input wired and integration assertions added for URI template expectations.
+- Chunk 6 complete: concise metadata/IPFS update and redeploy workflow added to README.
 
 Small chunks:
 1. Placeholder URI policy in earlier stages.
@@ -220,6 +222,12 @@ Sign-off artifacts:
 ### Stage 6 - Advanced Mechanics Discovery (Deferred, No Build Yet)
 Objective: evaluate and select mechanics only after metadata/IPFS workflow is complete.
 
+Status:
+- Chunk 1 complete: threat model rubric added for all candidate mechanics.
+- Chunk 2 complete: complexity vs game-value scoring matrix added.
+- Chunk 3 complete: shortlist finalized and implementation sequence defined.
+- Chunk 4 complete: crafting-only implementation spec defined and locked.
+
 Backlog ideas to evaluate:
 1. Crafting recipes (burn specific IDs for upgraded IDs).
 2. Seasonal item epochs and rollover mechanics.
@@ -238,13 +246,108 @@ Selection process for this stage:
 3. Testing burden estimate and coverage feasibility.
 4. Final mechanic shortlist and implementation stage plan.
 
+Threat model rubric (apply to each candidate):
+1. Asset risk:
+- Can this mechanic mint, burn, lock, or transfer value-bearing items?
+2. Privilege risk:
+- Does it require elevated roles, and can those privileges be abused?
+3. Economic risk:
+- Can users extract unfair value through loops, timing, or price manipulation?
+4. Liveness risk:
+- Can the mechanic be griefed/DoS'd or permanently blocked?
+5. Randomness/fairness risk:
+- If chance is involved, can outcomes be predicted or manipulated?
+6. Integration risk:
+- Does it depend on external systems (oracles/bridges/VRF) that add failure modes?
+
+Complexity vs value matrix (1-5 scale, higher is more):
+| Mechanic | Game Value | Security Risk | Implementation Complexity | Test Burden | Notes |
+| --- | --- | --- | --- | --- | --- |
+| Crafting recipes | 5 | 3 | 3 | 4 | Strong fit with current burn model and shop/crafting direction. |
+| Seasonal item epochs | 3 | 2 | 2 | 3 | Useful content cadence, moderate user impact. |
+| Soulbound achievement IDs | 3 | 2 | 2 | 2 | Straightforward transfer restrictions, low economic risk. |
+| Dynamic metadata progression | 4 | 3 | 4 | 4 | Valuable UX, but state-transition logic expands attack surface. |
+| Lootbox with fairness guarantees | 4 | 5 | 5 | 5 | High value but highest risk/complexity due to randomness integrity. |
+| Item staking for XP/materials | 4 | 4 | 4 | 5 | Broad gameplay depth; reward accounting and lock logic are sensitive. |
+| Set bonuses | 3 | 3 | 3 | 3 | Moderate impact, manageable complexity if read-only bonuses. |
+| Dynamic shop pricing/sinks | 4 | 4 | 4 | 4 | Valuable economy control; requires careful anti-manipulation design. |
+| Gasless meta-transactions | 3 | 4 | 4 | 4 | UX improvement with replay/signature complexity. |
+| Rental/borrow rights | 4 | 5 | 5 | 5 | Powerful but complex ownership/rights model and abuse cases. |
+
+Current recommendation (pre-shortlist):
+1. Start with `Crafting recipes` as first advanced mechanic.
+2. Consider `Soulbound achievement IDs` as low-risk secondary mechanic.
+3. Defer high-risk systems (`Lootbox`, `Rental/borrow`) until later iterations.
+
+Approved shortlist and order (locked):
+1. `Crafting recipes (burn -> upgraded item)` - first implementation target.
+2. `Set bonuses from ownership combinations` - read-only bonus computation preferred.
+3. `Soulbound achievement IDs` - non-transferable achievement subset.
+4. `Item staking / progression resources` - staged after first three due to accounting complexity.
+
+Active focus now (locked):
+1. Only `Crafting recipes (burn -> upgraded item)` is in active implementation scope.
+2. All other mechanics are paused until crafting stage is fully completed and signed off.
+
+Crafting implementation progress:
+1. Chunk 1 complete: `CraftingShop` scaffold added with admin-gated recipe storage/events and unit tests.
+2. Chunk 2 complete: `craft(recipeId, times)` added with atomic transfer->burn->mint flow and unit tests.
+3. Chunk 3 complete: deployment wiring added to deploy `CraftingShop` and grant it `MINTER_ROLE` + `BURNER_ROLE`.
+4. Chunk 4 complete: integration/invariant coverage added for crafting safety properties.
+
+Crafting implementation spec (execution order):
+1. Contract boundary and trust model.
+- Add a dedicated `CraftingShop` contract for recipe logic.
+- `GameItems` remains token/role primitive; recipe rules stay outside token contract.
+- `CraftingShop` receives `MINTER_ROLE` and `BURNER_ROLE` on `GameItems`.
+
+2. Recipe model.
+- Each recipe defines:
+  - input token IDs and required amounts
+  - output token ID and output amount
+  - enabled/disabled flag
+- Add recipe management functions gated to admin role in `CraftingShop`.
+
+3. Craft execution flow (single transaction).
+- User calls `craft(recipeId, times)` on `CraftingShop`.
+- `CraftingShop` pulls required inputs from user using ERC-1155 transfer approval.
+- `CraftingShop` calls `GameItems.burnBatch(...)` from its own balance.
+- `CraftingShop` mints output to user via `GameItems.mint(...)`.
+- Enforce atomicity: any failure reverts full flow.
+
+4. Security controls.
+- Validate recipe existence, enabled flag, and non-zero amounts.
+- Validate `times` bounds and overflow-safe multiplication for required inputs.
+- Reject malformed recipes (length mismatch, duplicate IDs policy decision explicit).
+- Emit events for recipe creation/update/toggle and successful crafts.
+
+5. Tests and gate criteria.
+- Unit tests:
+  - recipe CRUD/toggle access control
+  - successful craft path
+  - insufficient balance / missing approval reverts
+  - disabled/unknown recipe reverts
+  - multi-craft (`times > 1`) correctness
+- Integration tests:
+  - deployment wiring grants shop required roles
+  - end-to-end craft from player account
+- Invariants:
+  - crafting cannot reduce total supply except through burner-owned burn path
+  - crafting output supply tracks expected recipe conversions
+- Stage gate remains 100% lines/functions/branches for `src/` and `script/` (unreachable exceptions documented if any).
+
+Deferred for later consideration:
+1. `Gasless UX via relayed/meta transactions`.
+2. `Lootbox mechanics with fairness guarantees (VRF)`.
+3. Remaining backlog mechanics not in shortlist.
+
 Sign-off artifacts:
 - Ranked shortlist and explicit inclusion/exclusion rationale.
-- Next-stage implementation spec drafted from selected mechanics.
+- Crafting-only implementation spec approved.
 
 ### Working Defaults (Current)
 - Scope now: core token + deployment + testing + docs, with metadata/IPFS finalized last.
-- Advanced mechanics: intentionally deferred to Stage 5 selection.
+- Advanced mechanics: intentionally deferred to Stage 6 selection.
 - No transition between stages without completed review cycle and gate pass.
 - Burn policy default: burns are role-gated with explicit custom functions, not arbitrary holder burn.
 - Role assignment default: deployer receives all roles initially; reassignment to external contracts is a later controlled step.

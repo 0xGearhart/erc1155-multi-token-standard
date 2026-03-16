@@ -86,8 +86,8 @@ deploy:
 
 # Generate deterministic ERC-1155 metadata JSON files.
 metadata-generate:
-	@./scripts/metadata/generate_metadata.py --source metadata/source/items.json --out metadata/build
+	@./script/metadata/generate_metadata.py --source metadata/source/items.json --out metadata/build
 
 # Pin metadata folder to IPFS and print URI template.
 metadata-pin:
-	@./scripts/metadata/pin_ipfs.sh metadata/build
+	@./script/metadata/pin_ipfs.sh metadata/build
