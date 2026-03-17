@@ -5,7 +5,7 @@ pragma solidity 0.8.33;
 import {Script, console2} from "forge-std/Script.sol";
 
 contract CodeConstants {
-    string constant GAME_ITEMS_URI = "";
+    string constant GAME_ITEMS_URI = "ipfs://placeholder/{id}.json";
     uint48 constant GAME_ITEMS_ADMIN_DELAY = 1;
     // uint256 constant INITIAL_SUPPLY = 1 ether;
 
