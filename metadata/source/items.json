@@ -1,0 +1,22 @@
+[
+  {
+    "id": 1,
+    "name": "Iron Sword",
+    "description": "Starter melee weapon.",
+    "image": "ipfs://<CID>/images/iron-sword.png",
+    "attributes": [
+      { "trait_type": "Rarity", "value": "Common" },
+      { "trait_type": "Power", "value": 10 }
+    ]
+  },
+  {
+    "id": 2,
+    "name": "Steel Shield",
+    "description": "Starter defensive item.",
+    "image": "ipfs://<CID>/images/steel-shield.png",
+    "attributes": [
+      { "trait_type": "Rarity", "value": "Common" },
+      { "trait_type": "Defense", "value": 12 }
+    ]
+  }
+]
